@@ -31,6 +31,15 @@ class TrayManager {
     ]);
     await _mainTray.setContextMenu(menu);
 
+    // Register event handler to show menu on both left and right clicks
+    _mainTray.registerSystemTrayEventHandler((eventName) {
+      if (eventName == kSystemTrayEventClick) {
+        _mainTray.popUpContextMenu();
+      } else if (eventName == kSystemTrayEventRightClick) {
+        _mainTray.popUpContextMenu();
+      }
+    });
+
     _monitorService.addListener(_updateTray);
     _settingsService.addListener(_updateTray);
 
