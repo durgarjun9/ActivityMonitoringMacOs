@@ -1,16 +1,41 @@
-# wifi_speed_monitor
+# SystemMonitoring for macOS
 
-A new Flutter project.
+A premium, minimalist system monitoring utility built with Flutter for the macOS menu bar. Track your Mac's performance at a glance with sleek, monochrome metrics and a modern dashboard.
 
-## Getting Started
+## ✨ Features
 
-This project is a starting point for a Flutter application.
+- **Real-time Menu Bar Stats**: Monitor your system performance without leaving your workspace.
+- **Minimalist Aesthetic**: Uses professional monochrome symbols that adapt perfectly to Light and Dark modes.
+- **Comprehensive Monitoring**:
+  - ⚡︎ **CPU Usage**: Live percentage and thermal level tracking.
+  - 🧠 **RAM Utilization**: Real-time memory pressure monitoring.
+  - ⛁ **Disk Availability**: Track available storage space on your primary drive.
+  - ↓ **Network Throughput**: Real-time download (↓) and upload (↑) speeds.
+- **Glassmorphism Dashboard**: A stunning, modern UI to toggle specific metrics and customize your experience.
+- **Launch at Login**: Option to automatically start the app when you boot your Mac.
+- **Optimized for Background**: Runs silently in the background with minimal system impact.
 
-A few resources to get you started if this is your first Flutter project:
+## 🚀 Installation
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+1. Clone or download the repository.
+2. Build the release version:
+   ```bash
+   flutter build macos
+   ```
+3. Navigate to `build/macos/Build/Products/Release/`.
+4. Drag `SystemMonitoring.app` into your **Applications** folder.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🛠 Tech Stack
+
+- **Framework**: Flutter (macOS Desktop)
+- **State Management**: Provider
+- **System Access**: Native macOS CLI tools (`top`, `netstat`, `df`, `vm_stat`)
+- **Native Integration**: `system_tray` & `launch_at_startup`
+
+## 🎨 Icons
+
+The application uses a minimalist design system inspired by native macOS aesthetics. You can customize the app icon by replacing `assets/icon.png`.
+
+## 📄 License
+
+Individual/Personal use license. Built with ❤️ for the macOS community.
