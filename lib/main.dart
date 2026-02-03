@@ -8,6 +8,8 @@ import 'services/tray_manager.dart';
 
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:launch_at_startup/launch_at_startup.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +20,13 @@ void main() async {
   
   final trayManager = TrayManager(monitorService, settingsService);
   await trayManager.init();
+
+  // Initialize launch at startup
+  final packageInfo = await PackageInfo.fromPlatform();
+  launchAtStartup.setup(
+    appName: packageInfo.appName,
+    appPath: Platform.resolvedExecutable,
+  );
 
   runApp(
     MultiProvider(
@@ -132,6 +141,23 @@ class SettingsPage extends StatelessWidget {
                         icon: Icons.storage_rounded,
                         color: Colors.purpleAccent,
                         onChanged: (val) => settings.setShowDisk(val),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildGlassCard(
+                        context,
+                        title: 'Launch at Login',
+                        subtitle: 'Automatically start app on system boot',
+                        value: settings.launchAtLogin,
+                        icon: Icons.launch_rounded,
+                        color: Colors.redAccent,
+                        onChanged: (val) async {
+                          if (val) {
+                            await launchAtStartup.enable();
+                          } else {
+                            await launchAtStartup.disable();
+                          }
+                          await settings.setLaunchAtLogin(val);
+                        },
                       ),
                     ],
                   ),
