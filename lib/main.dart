@@ -8,8 +8,8 @@ import 'services/tray_manager.dart';
 
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:launch_at_startup/launch_at_startup.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'services/launch_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,12 +21,7 @@ void main() async {
   final trayManager = TrayManager(monitorService, settingsService);
   await trayManager.init();
 
-  // Initialize launch at startup
-  final packageInfo = await PackageInfo.fromPlatform();
-  launchAtStartup.setup(
-    appName: packageInfo.appName,
-    appPath: Platform.resolvedExecutable,
-  );
+  // No setup needed for custom LaunchService logic
 
   runApp(
     MultiProvider(
@@ -151,12 +146,23 @@ class SettingsPage extends StatelessWidget {
                         icon: Icons.launch_rounded,
                         color: Colors.redAccent,
                         onChanged: (val) async {
-                          if (val) {
-                            await launchAtStartup.enable();
-                          } else {
-                            await launchAtStartup.disable();
+                          try {
+                            if (val) {
+                              await LaunchService.enable();
+                            } else {
+                              await LaunchService.disable();
+                            }
+                            await settings.setLaunchAtLogin(val);
+                          } catch (e) {
+                            debugPrint('Failed to update launch at login: $e');
+                            await settings.setLaunchAtLogin(val);
+                            
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Could not update system login setting: $e')),
+                              );
+                            }
                           }
-                          await settings.setLaunchAtLogin(val);
                         },
                       ),
                     ],
