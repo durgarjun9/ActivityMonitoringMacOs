@@ -9,6 +9,7 @@ class TrayManager {
   final SettingsService _settingsService;
 
   final SystemTray _mainTray = SystemTray();
+  final AppWindow _appWindow = AppWindow();
   bool _isInitialized = false;
 
   TrayManager(this._monitorService, this._settingsService);
@@ -18,15 +19,15 @@ class TrayManager {
 
     // Use a generic monitor icon or the first one available
     await _mainTray.initSystemTray(
-      title: 'Monitor',
+      title: '...',
       iconPath: 'assets/icons/wifi.png', // Fallback icon
     );
 
     final Menu menu = Menu();
     await menu.buildFrom([
-      MenuItemLabel(label: 'Show Settings', onClicked: (menuItem) => AppWindow().show()),
+      MenuItemLabel(label: 'Open', onClicked: (menuItem) => _appWindow.show()),
       MenuSeparator(),
-      MenuItemLabel(label: 'Exit', onClicked: (menuItem) => exit(0)),
+      MenuItemLabel(label: 'Quit', onClicked: (menuItem) => exit(0)),
     ]);
     await _mainTray.setContextMenu(menu);
 
@@ -49,8 +50,7 @@ class TrayManager {
     }
 
     if (settings.showCpu) {
-      String cpuDisplay = "CPU:${stats.cpuUsagePercent.toStringAsFixed(1)}%";
-      // If thermal level is significant, show it, otherwise just %
+      String cpuDisplay = "⚡︎${stats.cpuUsagePercent.toStringAsFixed(0)}%";
       if (stats.cpuTemp > 0) {
         cpuDisplay += "(L${stats.cpuTemp.toStringAsFixed(0)})";
       }
@@ -58,20 +58,18 @@ class TrayManager {
     }
 
     if (settings.showRam) {
-      parts.add("RAM:${stats.ramUsagePercent.toStringAsFixed(1)}%");
+      parts.add("⑇${stats.ramUsagePercent.toStringAsFixed(0)}%");
     }
 
     if (settings.showDisk) {
-      parts.add("Disk:${stats.diskUsedGB.toStringAsFixed(0)}GB");
+      parts.add("⛁${stats.diskAvailableGB.toStringAsFixed(0)}GB");
     }
 
-    String title = parts.join("  |  ");
-    if (title.isEmpty) title = "Monitoring Off";
+    String title = parts.join("  ");
+    if (title.isEmpty) title = "SystemMonitoring";
 
     _mainTray.setSystemTrayInfo(
       title: title,
-      // We can also dynamically change the icon based on what's most important, 
-      // but keeping it stable for now is better for the menu bar.
       iconPath: _getBestIcon(settings),
     );
   }

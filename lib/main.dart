@@ -6,6 +6,9 @@ import 'services/system_monitor_service.dart';
 import 'services/settings_service.dart';
 import 'services/tray_manager.dart';
 
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -33,7 +36,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'System Monitor',
+      title: 'SystemMonitoring',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
@@ -63,9 +66,9 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('System Monitor', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text('SystemMonitoring', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         centerTitle: true,
-        backgroundColor: Colors.black.withOpacity(0.2),
+        backgroundColor: Colors.black.withValues(alpha: 0.2),
         elevation: 0,
       ),
       body: Container(
@@ -124,7 +127,7 @@ class SettingsPage extends StatelessWidget {
                       _buildGlassCard(
                         context,
                         title: 'Disk Storage',
-                        subtitle: '${stats.diskUsedGB.toStringAsFixed(1)} GB Used of ${stats.diskTotalGB.toStringAsFixed(0)} GB',
+                        subtitle: '${stats.diskAvailableGB.toStringAsFixed(1)} GB Available of ${stats.diskTotalGB.toStringAsFixed(0)} GB',
                         value: settings.showDisk,
                         icon: Icons.storage_rounded,
                         color: Colors.purpleAccent,
@@ -138,7 +141,7 @@ class SettingsPage extends StatelessWidget {
                     padding: const EdgeInsets.all(20.0),
                     child: Text(
                       'Monitoring Active in macOS Menu Bar',
-                      style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 11),
                     ),
                   ),
                 ),
@@ -161,9 +164,9 @@ class SettingsPage extends StatelessWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -172,16 +175,16 @@ class SettingsPage extends StatelessWidget {
           secondary: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color),
           ),
           title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          subtitle: Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.6))),
+          subtitle: Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
           value: value,
           onChanged: onChanged,
-          activeColor: color,
+          activeThumbColor: color,
         ),
       ),
     );

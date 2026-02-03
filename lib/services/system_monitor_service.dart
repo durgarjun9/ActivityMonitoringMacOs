@@ -37,7 +37,7 @@ class SystemMonitorService extends ChangeNotifier {
   }
 
   void start() {
-    _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _updateStats();
     });
   }
@@ -59,6 +59,7 @@ class SystemMonitorService extends ChangeNotifier {
       ramUsagePercent: ram,
       diskUsagePercent: diskData.percent,
       diskUsedGB: diskData.usedGB,
+      diskAvailableGB: diskData.availableGB,
       diskTotalGB: diskData.totalGB,
       cpuUsagePercent: cpuUsage,
       cpuTemp: temp,
@@ -153,29 +154,36 @@ class SystemMonitorService extends ChangeNotifier {
     return int.tryParse(parts[1].replaceAll('.', '').trim()) ?? 0;
   }
 
-  Future<({double percent, double usedGB, double totalGB})> _getDetailedDiskUsage() async {
+  Future<({double percent, double usedGB, double availableGB, double totalGB})> _getDetailedDiskUsage() async {
     try {
       final result = await Process.run('df', ['-k', '/']);
-      if (result.exitCode != 0) return (percent: 0.0, usedGB: 0.0, totalGB: 0.0);
+      if (result.exitCode != 0) return (percent: 0.0, usedGB: 0.0, availableGB: 0.0, totalGB: 0.0);
 
       final lines = result.stdout.toString().trim().split('\n');
-      if (lines.length < 2) return (percent: 0.0, usedGB: 0.0, totalGB: 0.0);
+      if (lines.length < 2) return (percent: 0.0, usedGB: 0.0, availableGB: 0.0, totalGB: 0.0);
 
       final parts = lines[1].split(RegExp(r'\s+'));
-      if (parts.length < 5) return (percent: 0.0, usedGB: 0.0, totalGB: 0.0);
+      if (parts.length < 5) return (percent: 0.0, usedGB: 0.0, availableGB: 0.0, totalGB: 0.0);
 
       double totalK = double.tryParse(parts[1]) ?? 0.0;
       double usedK = double.tryParse(parts[2]) ?? 0.0;
+      double availableK = double.tryParse(parts[3]) ?? 0.0;
+      
+      // On some macOS systems, total might not equal used + available due to reserves or APFS sharing.
+      // But usedK and availableK are reliable.
+      if (totalK == 0) totalK = usedK + availableK;
+
       String capacityStr = parts[4].replaceAll('%', '');
       double percent = double.tryParse(capacityStr) ?? (totalK > 0 ? (usedK/totalK)*100 : 0.0);
 
       return (
         percent: percent,
         usedGB: usedK / (1024 * 1024),
+        availableGB: availableK / (1024 * 1024),
         totalGB: totalK / (1024 * 1024),
       );
     } catch (e) {
-      return (percent: 0.0, usedGB: 0.0, totalGB: 0.0);
+      return (percent: 0.0, usedGB: 0.0, availableGB: 0.0, totalGB: 0.0);
     }
   }
 
@@ -190,7 +198,8 @@ class SystemMonitorService extends ChangeNotifier {
       if (cpuLine.isEmpty) return 0.0;
 
       // Format: CPU usage: 10.15% user, 8.27% sys, 81.57% idle
-      final regExp = RegExp(r'(\d+\.\d+)%\s+user,\s+(\d+\.\d+)%\s+sys');
+      // or Format: CPU usage: 10% user, 8% sys, 82% idle
+      final regExp = RegExp(r'(\d+(?:\.\d+)?)%\s+user,\s+(\d+(?:\.\d+)?)%\s+sys');
       final match = regExp.firstMatch(cpuLine);
       if (match != null) {
         double user = double.tryParse(match.group(1)!) ?? 0.0;

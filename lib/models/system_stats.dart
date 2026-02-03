@@ -7,6 +7,7 @@ class SystemStats {
   final double ramUsagePercent;
   final double diskUsagePercent;
   final double diskUsedGB;
+  final double diskAvailableGB;
   final double diskTotalGB;
 
   SystemStats({
@@ -17,6 +18,7 @@ class SystemStats {
     this.ramUsagePercent = 0,
     this.diskUsagePercent = 0,
     this.diskUsedGB = 0,
+    this.diskAvailableGB = 0,
     this.diskTotalGB = 0,
   });
 
@@ -24,8 +26,8 @@ class SystemStats {
   String get uploadSpeedStr => _formatSpeed(uploadSpeed);
 
   String _formatSpeed(double bytesPerSecond) {
-    if (bytesPerSecond < 1024) return "${bytesPerSecond.toStringAsFixed(1)} B/s";
-    if (bytesPerSecond < 1024 * 1024) return "${(bytesPerSecond / 1024).toStringAsFixed(1)} KB/s";
-    return "${(bytesPerSecond / (1024 * 1024)).toStringAsFixed(1)} MB/s";
+    if (bytesPerSecond < 1024) return "${bytesPerSecond.toStringAsFixed(0)}B";
+    if (bytesPerSecond < 1024 * 1024) return "${(bytesPerSecond / 1024).toStringAsFixed(1)}K";
+    return "${(bytesPerSecond / (1024 * 1024)).toStringAsFixed(1)}M";
   }
 }
