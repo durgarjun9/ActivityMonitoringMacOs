@@ -4,6 +4,7 @@ import 'package:system_tray/system_tray.dart';
 import 'system_monitor_service.dart';
 import 'settings_service.dart';
 
+/// Manages the macOS system tray (menu bar) icon and menu.
 class TrayManager {
   final SystemMonitorService _monitorService;
   final SettingsService _settingsService;
@@ -14,28 +15,25 @@ class TrayManager {
 
   TrayManager(this._monitorService, this._settingsService);
 
+  /// Initializes the system tray and starts listening for changes.
   Future<void> init() async {
     if (_isInitialized) return;
 
-    // Use a generic monitor icon or the first one available
     await _mainTray.initSystemTray(
       title: '...',
-      iconPath: 'assets/icons/wifi.png', // Fallback icon
+      iconPath: 'assets/icons/wifi.png',
     );
 
     final Menu menu = Menu();
     await menu.buildFrom([
-      MenuItemLabel(label: 'Open', onClicked: (menuItem) => _appWindow.show()),
+      MenuItemLabel(label: 'Open Settings', onClicked: (menuItem) => _appWindow.show()),
       MenuSeparator(),
       MenuItemLabel(label: 'Quit', onClicked: (menuItem) => exit(0)),
     ]);
     await _mainTray.setContextMenu(menu);
 
-    // Register event handler to show menu on both left and right clicks
     _mainTray.registerSystemTrayEventHandler((eventName) {
-      if (eventName == kSystemTrayEventClick) {
-        _mainTray.popUpContextMenu();
-      } else if (eventName == kSystemTrayEventRightClick) {
+      if (eventName == kSystemTrayEventClick || eventName == kSystemTrayEventRightClick) {
         _mainTray.popUpContextMenu();
       }
     });
@@ -44,15 +42,15 @@ class TrayManager {
     _settingsService.addListener(_updateTray);
 
     _updateTray();
-    
     _isInitialized = true;
   }
 
+  /// Updates the tray title and icon based on current stats and settings.
   void _updateTray() {
     final stats = _monitorService.stats;
     final settings = _settingsService;
     
-    List<String> parts = [];
+    final List<String> parts = [];
 
     if (settings.showWifi) {
       parts.add("↓${stats.downloadSpeedStr} ↑${stats.uploadSpeedStr}");
@@ -91,4 +89,3 @@ class TrayManager {
     return 'assets/icons/wifi.png';
   }
 }
-

@@ -4,8 +4,11 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../models/system_stats.dart';
 
+/// Service responsible for monitoring system resources like WiFi, RAM, CPU, and Disk.
 class SystemMonitorService extends ChangeNotifier {
   SystemStats _stats = SystemStats();
+
+  /// Current system statistics.
   SystemStats get stats => _stats;
 
   Timer? _timer;
@@ -16,57 +19,74 @@ class SystemMonitorService extends ChangeNotifier {
   String _interface = "en0";
 
   SystemMonitorService() {
-    _findWifiInterface().then((_) => start());
+    _init();
   }
 
+  Future<void> _init() async {
+    await _findWifiInterface();
+    start();
+  }
+
+  /// Finds the primary WiFi interface name (e.g., en0).
   Future<void> _findWifiInterface() async {
     try {
       final result = await Process.run('networksetup', ['-listallhardwareports']);
+      if (result.exitCode != 0) return;
+
       final lines = result.stdout.toString().split('\n');
       for (int i = 0; i < lines.length; i++) {
         if (lines[i].contains('Wi-Fi')) {
-          if (i + 1 < lines.length && lines[i+1].contains('Device:')) {
-            _interface = lines[i+1].split('Device:')[1].trim();
+          if (i + 1 < lines.length && lines[i + 1].contains('Device:')) {
+            _interface = lines[i + 1].split('Device:')[1].trim();
             break;
           }
         }
       }
     } catch (e) {
+      debugPrint('Error finding WiFi interface: $e');
       _interface = "en0";
     }
   }
 
+  /// Starts the periodic update timer.
   void start() {
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _updateStats();
     });
   }
 
+  /// Stops the periodic update timer.
   void stop() {
     _timer?.cancel();
   }
 
   Future<void> _updateStats() async {
-    final wifi = await _getWifiSpeed();
-    final ram = await _getRamUsage();
-    final diskData = await _getDetailedDiskUsage();
-    final cpuUsage = await _getCpuUsage();
-    final temp = await _getCpuTemp();
+    try {
+      final wifi = await _getWifiSpeed();
+      final ram = await _getRamUsage();
+      final diskData = await _getDetailedDiskUsage();
+      final cpuUsage = await _getCpuUsage();
+      final temp = await _getCpuTemp();
 
-    _stats = SystemStats(
-      downloadSpeed: wifi.download,
-      uploadSpeed: wifi.upload,
-      ramUsagePercent: ram,
-      diskUsagePercent: diskData.percent,
-      diskUsedGB: diskData.usedGB,
-      diskAvailableGB: diskData.availableGB,
-      diskTotalGB: diskData.totalGB,
-      cpuUsagePercent: cpuUsage,
-      cpuTemp: temp,
-    );
-    notifyListeners();
+      _stats = SystemStats(
+        downloadSpeed: wifi.download,
+        uploadSpeed: wifi.upload,
+        ramUsagePercent: ram,
+        diskUsagePercent: diskData.percent,
+        diskUsedGB: diskData.usedGB,
+        diskAvailableGB: diskData.availableGB,
+        diskTotalGB: diskData.totalGB,
+        cpuUsagePercent: cpuUsage,
+        cpuTemp: temp,
+      );
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error updating stats: $e');
+    }
   }
 
+  /// Calculates WiFi download and upload speeds in bytes per second.
   Future<({double download, double upload})> _getWifiSpeed() async {
     try {
       final result = await Process.run('netstat', ['-I', _interface, '-b', '-n']);
@@ -81,6 +101,7 @@ class SystemMonitorService extends ChangeNotifier {
       final parts = dataLine.split(RegExp(r'\s+'));
       if (parts.length < 10) return (download: 0.0, upload: 0.0);
 
+      // columns 6 and 9 (0-indexed) are Ibytes and Obytes
       int currentIn = int.tryParse(parts[6]) ?? 0;
       int currentOut = int.tryParse(parts[9]) ?? 0;
       DateTime currentTime = DateTime.now();
@@ -102,12 +123,17 @@ class SystemMonitorService extends ChangeNotifier {
       _prevOutBytes = currentOut;
       _prevTime = currentTime;
 
-      return (download: downSpeed < 0 ? 0.0 : downSpeed, upload: upSpeed < 0 ? 0.0 : upSpeed);
+      return (
+        download: downSpeed < 0 ? 0.0 : downSpeed,
+        upload: upSpeed < 0 ? 0.0 : upSpeed,
+      );
     } catch (e) {
+      debugPrint('Error getting WiFi speed: $e');
       return (download: 0.0, upload: 0.0);
     }
   }
 
+  /// Calculates RAM usage percentage using vm_stat.
   Future<double> _getRamUsage() async {
     try {
       final result = await Process.run('vm_stat', []);
@@ -144,6 +170,7 @@ class SystemMonitorService extends ChangeNotifier {
       if (total == 0) return 0.0;
       return (totalUsed / total) * 100.0;
     } catch (e) {
+      debugPrint('Error getting RAM usage: $e');
       return 0.0;
     }
   }
@@ -154,27 +181,32 @@ class SystemMonitorService extends ChangeNotifier {
     return int.tryParse(parts[1].replaceAll('.', '').trim()) ?? 0;
   }
 
+  /// Gets detailed disk usage for the root partition.
   Future<({double percent, double usedGB, double availableGB, double totalGB})> _getDetailedDiskUsage() async {
     try {
       final result = await Process.run('df', ['-k', '/']);
-      if (result.exitCode != 0) return (percent: 0.0, usedGB: 0.0, availableGB: 0.0, totalGB: 0.0);
+      if (result.exitCode != 0) {
+        return (percent: 0.0, usedGB: 0.0, availableGB: 0.0, totalGB: 0.0);
+      }
 
       final lines = result.stdout.toString().trim().split('\n');
-      if (lines.length < 2) return (percent: 0.0, usedGB: 0.0, availableGB: 0.0, totalGB: 0.0);
+      if (lines.length < 2) {
+        return (percent: 0.0, usedGB: 0.0, availableGB: 0.0, totalGB: 0.0);
+      }
 
       final parts = lines[1].split(RegExp(r'\s+'));
-      if (parts.length < 5) return (percent: 0.0, usedGB: 0.0, availableGB: 0.0, totalGB: 0.0);
+      if (parts.length < 5) {
+        return (percent: 0.0, usedGB: 0.0, availableGB: 0.0, totalGB: 0.0);
+      }
 
       double totalK = double.tryParse(parts[1]) ?? 0.0;
       double usedK = double.tryParse(parts[2]) ?? 0.0;
       double availableK = double.tryParse(parts[3]) ?? 0.0;
-      
-      // On some macOS systems, total might not equal used + available due to reserves or APFS sharing.
-      // But usedK and availableK are reliable.
+
       if (totalK == 0) totalK = usedK + availableK;
 
       String capacityStr = parts[4].replaceAll('%', '');
-      double percent = double.tryParse(capacityStr) ?? (totalK > 0 ? (usedK/totalK)*100 : 0.0);
+      double percent = double.tryParse(capacityStr) ?? (totalK > 0 ? (usedK / totalK) * 100 : 0.0);
 
       return (
         percent: percent,
@@ -183,22 +215,21 @@ class SystemMonitorService extends ChangeNotifier {
         totalGB: totalK / (1024 * 1024),
       );
     } catch (e) {
+      debugPrint('Error getting disk usage: $e');
       return (percent: 0.0, usedGB: 0.0, availableGB: 0.0, totalGB: 0.0);
     }
   }
 
+  /// Gets CPU usage percentage using top.
   Future<double> _getCpuUsage() async {
     try {
-      // top -l 1 -n 0 | grep "CPU usage"
       final result = await Process.run('top', ['-l', '1', '-n', '0']);
       if (result.exitCode != 0) return 0.0;
-      
+
       final lines = result.stdout.toString().split('\n');
       final cpuLine = lines.firstWhere((l) => l.contains('CPU usage:'), orElse: () => "");
       if (cpuLine.isEmpty) return 0.0;
 
-      // Format: CPU usage: 10.15% user, 8.27% sys, 81.57% idle
-      // or Format: CPU usage: 10% user, 8% sys, 82% idle
       final regExp = RegExp(r'(\d+(?:\.\d+)?)%\s+user,\s+(\d+(?:\.\d+)?)%\s+sys');
       final match = regExp.firstMatch(cpuLine);
       if (match != null) {
@@ -206,17 +237,28 @@ class SystemMonitorService extends ChangeNotifier {
         double sys = double.tryParse(match.group(2)!) ?? 0.0;
         return user + sys;
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Error getting CPU usage: $e');
+    }
     return 0.0;
   }
 
+  /// Gets CPU thermal level using sysctl.
   Future<double> _getCpuTemp() async {
     try {
       final result = await Process.run('sysctl', ['-n', 'machdep.xcpm.cpu_thermal_level']);
       if (result.exitCode == 0) {
         return double.tryParse(result.stdout.toString().trim()) ?? 0.0;
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Error getting CPU temp: $e');
+    }
     return 0.0;
+  }
+
+  @override
+  void dispose() {
+    stop();
+    super.dispose();
   }
 }

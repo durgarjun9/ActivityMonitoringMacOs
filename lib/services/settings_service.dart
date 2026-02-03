@@ -1,13 +1,16 @@
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Service responsible for managing application settings.
 class SettingsService extends ChangeNotifier {
   static const String _keyShowWifi = 'show_wifi';
   static const String _keyShowCpu = 'show_cpu';
   static const String _keyShowRam = 'show_ram';
   static const String _keyShowDisk = 'show_disk';
   static const String _keyLaunchAtLogin = 'launch_at_login';
+
+  final SharedPreferences _prefs;
 
   bool _showWifi = true;
   bool _showCpu = true;
@@ -21,14 +24,17 @@ class SettingsService extends ChangeNotifier {
   bool get showDisk => _showDisk;
   bool get launchAtLogin => _launchAtLogin;
 
-  final SharedPreferences _prefs;
-
   SettingsService(this._prefs) {
+    _loadSettings();
+  }
+
+  void _loadSettings() {
     _showWifi = _prefs.getBool(_keyShowWifi) ?? true;
     _showCpu = _prefs.getBool(_keyShowCpu) ?? true;
     _showRam = _prefs.getBool(_keyShowRam) ?? true;
     _showDisk = _prefs.getBool(_keyShowDisk) ?? true;
     _launchAtLogin = _prefs.getBool(_keyLaunchAtLogin) ?? false;
+    notifyListeners();
   }
 
   Future<void> setShowWifi(bool value) async {
