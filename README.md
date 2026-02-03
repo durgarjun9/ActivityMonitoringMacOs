@@ -36,6 +36,3 @@ A premium, minimalist system monitoring utility built with Flutter for the macOS
 
 The application uses a minimalist design system inspired by native macOS aesthetics. You can customize the app icon by replacing `assets/icon.png`.
 
-## 📄 License
-
-Individual/Personal use license. Built with ❤️ for the macOS community.
