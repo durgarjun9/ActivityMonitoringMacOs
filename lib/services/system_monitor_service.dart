@@ -3,9 +3,11 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../models/system_stats.dart';
+import 'settings_service.dart';
 
 /// Service responsible for monitoring system resources like WiFi, RAM, CPU, and Disk.
 class SystemMonitorService extends ChangeNotifier {
+  final SettingsService _settings;
   SystemStats _stats = SystemStats();
 
   /// Current system statistics.
@@ -15,15 +17,18 @@ class SystemMonitorService extends ChangeNotifier {
   int _prevInBytes = 0;
   int _prevOutBytes = 0;
   DateTime _prevTime = DateTime.now();
+  int _tickCount = 0;
 
   String _interface = "en0";
 
-  SystemMonitorService() {
+  SystemMonitorService(this._settings) {
     _init();
   }
 
   Future<void> _init() async {
     await _findWifiInterface();
+    // Initial update for all stats
+    await _updateStats(forceAll: true);
     start();
   }
 
@@ -52,6 +57,7 @@ class SystemMonitorService extends ChangeNotifier {
   void start() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _tickCount++;
       _updateStats();
     });
   }
@@ -61,26 +67,50 @@ class SystemMonitorService extends ChangeNotifier {
     _timer?.cancel();
   }
 
-  Future<void> _updateStats() async {
+  Future<void> _updateStats({bool forceAll = false}) async {
     try {
-      final wifi = await _getWifiSpeed();
-      final ram = await _getRamUsage();
-      final diskData = await _getDetailedDiskUsage();
-      final cpuUsage = await _getCpuUsage();
-      final temp = await _getCpuTemp();
+      SystemStats newStats = _stats;
 
-      _stats = SystemStats(
-        downloadSpeed: wifi.download,
-        uploadSpeed: wifi.upload,
-        ramUsagePercent: ram,
-        diskUsagePercent: diskData.percent,
-        diskUsedGB: diskData.usedGB,
-        diskAvailableGB: diskData.availableGB,
-        diskTotalGB: diskData.totalGB,
-        cpuUsagePercent: cpuUsage,
-        cpuTemp: temp,
-      );
-      notifyListeners();
+      // WiFi speed: Every 2 seconds
+      if (forceAll || (_settings.showWifi && _tickCount % 2 == 0)) {
+        final wifi = await _getWifiSpeed();
+        newStats = newStats.copyWith(
+          downloadSpeed: wifi.download,
+          uploadSpeed: wifi.upload,
+        );
+      }
+
+      // CPU usage: Every 3 seconds (top is heavy)
+      if (forceAll || (_settings.showCpu && _tickCount % 3 == 0)) {
+        final cpuUsage = await _getCpuUsage();
+        final temp = await _getCpuTemp();
+        newStats = newStats.copyWith(
+          cpuUsagePercent: cpuUsage,
+          cpuTemp: temp,
+        );
+      }
+
+      // RAM usage: Every 10 seconds
+      if (forceAll || (_settings.showRam && _tickCount % 10 == 0)) {
+        final ram = await _getRamUsage();
+        newStats = newStats.copyWith(ramUsagePercent: ram);
+      }
+
+      // Disk usage: Every 60 seconds
+      if (forceAll || (_settings.showDisk && _tickCount % 60 == 0)) {
+        final diskData = await _getDetailedDiskUsage();
+        newStats = newStats.copyWith(
+          diskUsagePercent: diskData.percent,
+          diskUsedGB: diskData.usedGB,
+          diskAvailableGB: diskData.availableGB,
+          diskTotalGB: diskData.totalGB,
+        );
+      }
+
+      if (newStats != _stats) {
+        _stats = newStats;
+        notifyListeners();
+      }
     } catch (e) {
       debugPrint('Error updating stats: $e');
     }
@@ -223,7 +253,9 @@ class SystemMonitorService extends ChangeNotifier {
   /// Gets CPU usage percentage using top.
   Future<double> _getCpuUsage() async {
     try {
-      final result = await Process.run('top', ['-l', '1', '-n', '0']);
+      // -l 1: one sample, -n 0: zero processes (much faster)
+      // -F: no shared library stats, -R: no reversed process list
+      final result = await Process.run('top', ['-l', '1', '-n', '0', '-F', '-R']);
       if (result.exitCode != 0) return 0.0;
 
       final lines = result.stdout.toString().split('\n');

@@ -14,7 +14,7 @@ void main() async {
   
   final prefs = await SharedPreferences.getInstance();
   final settingsService = SettingsService(prefs);
-  final monitorService = SystemMonitorService();
+  final monitorService = SystemMonitorService(settingsService);
   
   final trayManager = TrayManager(monitorService, settingsService);
   await trayManager.init();

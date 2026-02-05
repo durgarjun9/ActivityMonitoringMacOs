@@ -1,38 +1,91 @@
-# SystemMonitoring for macOS
+# 🖥️ SystemMonitoring for macOS
 
-A premium, minimalist system monitoring utility built with Flutter for the macOS menu bar. Track your Mac's performance at a glance with sleek, monochrome metrics and a modern dashboard.
+[![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)]()
+[![Platform](https://img.shields.io/badge/Platform-macOS-lightgrey.svg)]()
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)]()
 
-## ✨ Features
+A premium, high-performance system monitoring utility for the macOS menu bar. Track your Mac's vitals in real-time with a minimalist aesthetic and a powerful glassmorphic dashboard.
 
-- **Real-time Menu Bar Stats**: Monitor your system performance without leaving your workspace.
-- **Minimalist Aesthetic**: Uses professional monochrome symbols that adapt perfectly to Light and Dark modes.
-- **Comprehensive Monitoring**:
-  - ⚡︎ **CPU Usage**: Live percentage and thermal level tracking.
-  - 🧠 **RAM Utilization**: Real-time memory pressure monitoring.
-  - ⛁ **Disk Availability**: Track available storage space on your primary drive.
-  - ↓ **Network Throughput**: Real-time download (↓) and upload (↑) speeds.
-- **Glassmorphism Dashboard**: A stunning, modern UI to toggle specific metrics and customize your experience.
-- **Launch at Login**: Option to automatically start the app when you boot your Mac.
-- **Optimized for Background**: Runs silently in the background with minimal system impact.
+![SystemMonitoring Dashboard](https://raw.githubusercontent.com/durgarjun9/ActivityMonitoringMacOs/main/assets/screenshots/dashboard_preview.png)
+*Modern Glassmorphism Design with Real-time Analytics*
 
-## 🚀 Installation
+---
 
-1. Clone or download the repository.
-2. Build the release version:
+## 🎨 Professional Aesthetics
+
+Designed to feel like a native part of macOS, SystemMonitoring combines functionality with high-end design principles:
+- **Glassmorphism UI**: Frosted glass effects that respond to your system wallpaper.
+- **Dynamic Symbols**: Monochrome icons that adapt perfectly to both Light and Dark modes.
+- **Micro-Animations**: Subtle transitions for a premium user experience.
+
+## ✨ Core Features
+
+### 📊 Real-time Monitoring
+- **Network Throughput**: Live download (↓) and upload (↑) speeds with auto-scaling units (B, K, M).
+- **CPU Performance**: Tracking of active user/sys usage and thermal levels.
+- **Memory Pressure**: Real-time percentage of RAM utilization.
+- **Disk Health**: Monitor available storage space on your root partition.
+
+### 🔋 Energy Optimized
+- **Smart Polling**: Staggered update intervals to minimize battery impact.
+- **Intelligent Monitoring**: Background tasks only run for metrics you have enabled.
+- **Minimal Footprint**: Uses optimized native system calls (`top -F -R`) for zero-lag performance.
+
+### 🛠️ Total Control
+- **Customizable Menu Bar**: Choose exactly what you want to see.
+- **Launch at Login**: Seamless integration with macOS login items.
+- **Global Accessibility**: Accessible from anywhere on your Mac.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- macOS 10.15 or later
+- [Flutter SDK](https://docs.flutter.dev/get-started/install/macos)
+
+### Build & Install
+1. **Clone the repository**
    ```bash
-   flutter build macos
+   git clone https://github.com/durgarjun9/ActivityMonitoringMacOs.git
+   cd ActivityMonitoringMacOs
    ```
-3. Navigate to `build/macos/Build/Products/Release/`.
-4. Drag `SystemMonitoring.app` into your **Applications** folder.
+
+2. **Install dependencies**
+   ```bash
+   flutter pub get
+   ```
+
+3. **Build the application**
+   ```bash
+   flutter build macos --release
+   ```
+
+4. **Install**
+   Drag the compiled `SystemMonitoring.app` from `build/macos/Build/Products/Release/` to your `/Applications` folder.
+
+---
 
 ## 🛠 Tech Stack
 
-- **Framework**: Flutter (macOS Desktop)
-- **State Management**: Provider
-- **System Access**: Native macOS CLI tools (`top`, `netstat`, `df`, `vm_stat`)
-- **Native Integration**: `system_tray` & `launch_at_startup`
+| Component | Technology |
+| :--- | :--- |
+| **Framework** | Flutter (macOS Desktop) |
+| **Language** | Dart |
+| **State Management** | Provider |
+| **Persistence** | SharedPreferences |
+| **Native Integration** | system_tray |
+| **System Source** | Native Darwin CLI Tools |
 
-## 🎨 Icons
+---
 
-The application uses a minimalist design system inspired by native macOS aesthetics. You can customize the app icon by replacing `assets/icon.png`.
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+<p align="center">
+  Built with ❤️ for the macOS Community
+</p>
 

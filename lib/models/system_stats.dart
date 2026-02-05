@@ -23,6 +23,30 @@ class SystemStats {
     this.diskTotalGB = 0,
   });
 
+  SystemStats copyWith({
+    double? uploadSpeed,
+    double? downloadSpeed,
+    double? cpuTemp,
+    double? cpuUsagePercent,
+    double? ramUsagePercent,
+    double? diskUsagePercent,
+    double? diskUsedGB,
+    double? diskAvailableGB,
+    double? diskTotalGB,
+  }) {
+    return SystemStats(
+      uploadSpeed: uploadSpeed ?? this.uploadSpeed,
+      downloadSpeed: downloadSpeed ?? this.downloadSpeed,
+      cpuTemp: cpuTemp ?? this.cpuTemp,
+      cpuUsagePercent: cpuUsagePercent ?? this.cpuUsagePercent,
+      ramUsagePercent: ramUsagePercent ?? this.ramUsagePercent,
+      diskUsagePercent: diskUsagePercent ?? this.diskUsagePercent,
+      diskUsedGB: diskUsedGB ?? this.diskUsedGB,
+      diskAvailableGB: diskAvailableGB ?? this.diskAvailableGB,
+      diskTotalGB: diskTotalGB ?? this.diskTotalGB,
+    );
+  }
+
   /// Formatted download speed (e.g., 1.5M, 200K).
   String get downloadSpeedStr => _formatSpeed(downloadSpeed);
 
@@ -38,4 +62,31 @@ class SystemStats {
       return "${(bytesPerSecond / (1024 * 1024)).toStringAsFixed(1)}M";
     }
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SystemStats &&
+          runtimeType == other.runtimeType &&
+          uploadSpeed == other.uploadSpeed &&
+          downloadSpeed == other.downloadSpeed &&
+          cpuTemp == other.cpuTemp &&
+          cpuUsagePercent == other.cpuUsagePercent &&
+          ramUsagePercent == other.ramUsagePercent &&
+          diskUsagePercent == other.diskUsagePercent &&
+          diskUsedGB == other.diskUsedGB &&
+          diskAvailableGB == other.diskAvailableGB &&
+          diskTotalGB == other.diskTotalGB;
+
+  @override
+  int get hashCode =>
+      uploadSpeed.hashCode ^
+      downloadSpeed.hashCode ^
+      cpuTemp.hashCode ^
+      cpuUsagePercent.hashCode ^
+      ramUsagePercent.hashCode ^
+      diskUsagePercent.hashCode ^
+      diskUsedGB.hashCode ^
+      diskAvailableGB.hashCode ^
+      diskTotalGB.hashCode;
 }
