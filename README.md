@@ -66,6 +66,22 @@ Designed to feel like a native part of macOS, SystemMonitoring combines function
 
 ---
 
+## Screenshots
+
+### Application
+
+![alt Application Screenshot](assets/screenshots/application_screenshot.png)
+
+### Menu Bar Icon
+
+![alt Menu Bar Icon Screenshot](assets/screenshots/menubar.png)
+
+### Settings & Quit
+
+![alt Settings & Quit Screenshot](assets/screenshots/settings_and_quit.png)
+
+---
+
 ## 🛠 Tech Stack
 
 | Component | Technology |
