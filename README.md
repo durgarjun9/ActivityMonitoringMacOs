@@ -6,7 +6,7 @@
 
 A premium, high-performance system monitoring utility for the macOS menu bar. Track your Mac's vitals in real-time with a minimalist aesthetic and a powerful glassmorphic dashboard.
 
-![SystemMonitoring Dashboard](https://raw.githubusercontent.com/durgarjun9/ActivityMonitoringMacOs/main/assets/screenshots/dashboard_preview.png)
+![SystemMonitoring Dashboard](assets/screenshots/application_screenshot.png)
 *Modern Glassmorphism Design with Real-time Analytics*
 
 ---
